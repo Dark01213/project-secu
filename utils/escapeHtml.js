@@ -8,4 +8,6 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;')
 }
 
-module.exports = { escapeHtml }
+// Provide both default and named CommonJS exports for compatibility
+module.exports = escapeHtml
+module.exports.escapeHtml = escapeHtml

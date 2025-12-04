@@ -1,6 +1,7 @@
 import '../styles/globals.css'
 import Footer from '../components/Footer'
 import { useEffect } from 'react'
+import CookieBanner from '../components/CookieBanner'
 
 function MyApp({ Component, pageProps }) {
   useEffect(() => {
@@ -29,6 +30,7 @@ function MyApp({ Component, pageProps }) {
 
   return (
     <>
+      <CookieBanner />
       <Component {...pageProps} />
       <Footer />
     </>

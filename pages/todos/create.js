@@ -1,64 +1,52 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/router'
 
-export default function CreateTodo(){
-  const [title,setTitle]=useState('')
-  const [description,setDescription]=useState('')
-  const [deadline,setDeadline]=useState('')
-  const [error,setError]=useState(null)
+export default function CreateTodo() {
   const router = useRouter()
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [deadline, setDeadline] = useState('')
+  const [error, setError] = useState(null)
 
-  async function submit(e){
+  async function handleSubmit(e) {
     e.preventDefault()
     setError(null)
-    const res = await fetch('/api/todos', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ title, description, deadline }) })
-    const data = await res.json()
-    if (!res.ok) setError(data.message || 'Erreur')
-    else router.push('/todos')
+    try {
+      const res = await fetch('/api/todos', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description, deadline })
+      })
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}))
+        throw new Error(payload?.error || 'Failed to create todo')
+      }
+      router.push('/todos')
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
   return (
-    <main style={{padding:20}}>
-      <h1>Créer une TODO</h1>
-      <form onSubmit={submit}>
-        <div><label>Titre <input value={title} onChange={e=>setTitle(e.target.value)} required/></label></div>
-        <div><label>Description <textarea value={description} onChange={e=>setDescription(e.target.value)} /></label></div>
-        <div><label>Deadline <input type="datetime-local" value={deadline} onChange={e=>setDeadline(e.target.value)} required/></label></div>
-        {error && <p style={{color:'red'}}>{error}</p>}
-        <button>Créer</button>
+    <div>
+      <h1>Create Todo</h1>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label htmlFor="title">Title</label>
+          <input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+        </div>
+        <div>
+          <label htmlFor="description">Description</label>
+          <textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
+        </div>
+        <div>
+          <label htmlFor="deadline">Deadline</label>
+          <input id="deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
+        </div>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+        <button type="submit">Create</button>
       </form>
-    </main>
-  )
-}
-import { useState } from 'react'
-import { useRouter } from 'next/router'
-
-export default function CreateTodo(){
-  const [title,setTitle]=useState('')
-  const [description,setDescription]=useState('')
-  const [deadline,setDeadline]=useState('')
-  const [error,setError]=useState(null)
-  const router = useRouter()
-
-  async function submit(e){
-    e.preventDefault()
-    setError(null)
-    const res = await fetch('/api/todos', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ title, description, deadline }) })
-    const data = await res.json()
-    if (!res.ok) setError(data.message || 'Erreur')
-    else router.push('/todos')
-  }
-
-  return (
-    <main style={{padding:20}}>
-      <h1>Créer une TODO</h1>
-      <form onSubmit={submit}>
-        <div><label>Titre <input value={title} onChange={e=>setTitle(e.target.value)} required/></label></div>
-        <div><label>Description <textarea value={description} onChange={e=>setDescription(e.target.value)} /></label></div>
-        <div><label>Deadline <input type="datetime-local" value={deadline} onChange={e=>setDeadline(e.target.value)} required/></label></div>
-        {error && <p style={{color:'red'}}>{error}</p>}
-        <button>Créer</button>
-      </form>
-    </main>
+    </div>
   )
 }

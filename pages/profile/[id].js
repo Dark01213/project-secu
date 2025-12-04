@@ -36,6 +36,16 @@ export default function Profile(){
       <h1>Profil de {me.name}</h1>
       <p>Email: {me.email}</p>
       <p>Rôle: {me.role}</p>
+      <div style={{marginTop:20}}>
+        <button onClick={async ()=>{
+          if (!confirm('Déconnecter tous les appareils associés à ce compte ?')) return
+          try{
+            const res = await fetch('/api/auth/logout-all', { method: 'POST', credentials: 'include' })
+            if (res.ok) window.location.href = '/login'
+            else alert('Erreur lors de la déconnexion')
+          }catch(e){ alert('Erreur réseau') }
+        }} style={{background:'#d33',color:'#fff',border:'none',padding:'8px 12px',borderRadius:4}}>Déconnecter tous les appareils</button>
+      </div>
       <form onSubmit={saveBio}>
         <div>
           <label>Bio (texte brut, les balises sont échappées)</label>

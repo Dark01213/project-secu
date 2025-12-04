@@ -5,7 +5,12 @@ const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
   passwordHash: { type: String, required: true },
   bio: { type: String, default: '' },
-  role: { type: String, enum: ['USER', 'ADMIN'], default: 'USER' },
+  role: { type: String, enum: ['USER', 'MANAGER', 'ADMIN'], default: 'USER' },
+  consentGiven: { type: Boolean, default: false },
+  consentDate: { type: Date },
+  deleted: { type: Boolean, default: false },
+  deletedAt: { type: Date },
+  tokenVersion: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
 })
 

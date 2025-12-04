@@ -19,6 +19,7 @@ export default function Home(){
         <div>
           <p>Connecté en tant que {user.name} ({user.role})</p>
           <p><Link href={`/profile/${user._id}`}>Mon profil</Link></p>
+          <p><Link href="/todos/create"><button className="button">Créer un TODO</button></Link></p>
           {user.role === 'ADMIN' && <p><Link href="/admin/dashboard">Admin dashboard</Link></p>}
         </div>
       ) : (

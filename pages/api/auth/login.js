@@ -18,7 +18,7 @@ module.exports = async (req, res) => {
     const match = await bcrypt.compare(password, user.passwordHash)
     if (!match) return res.status(401).json({ message: 'Authentification échouée' })
 
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'devsecret', { expiresIn: '30m' })
+    const token = jwt.sign({ id: user._id, role: user.role, tokenVersion: user.tokenVersion }, process.env.JWT_SECRET || 'devsecret', { expiresIn: '30m' })
     const isProd = process.env.NODE_ENV === 'production'
     res.setHeader('Set-Cookie', cookie.serialize('token', token, {
       httpOnly: true,
