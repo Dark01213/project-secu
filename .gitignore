@@ -8,3 +8,4 @@ npm-debug.log
 *.log
 /.vscode/
 cookies*.txt
+localhost-key.pem
