@@ -4,6 +4,26 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const cookie = require('cookie')
 const validator = require('validator')
+const crypto = require('crypto')
+
+// Simple in-memory rate limiter (per-process). Matches login limits.
+const RATE_LIMIT_WINDOW_MS = 60 * 1000 // 1 minute
+const RATE_LIMIT_MAX = 5
+const rateLimitStore = new Map()
+function checkRateLimit(key) {
+  const now = Date.now()
+  const entry = rateLimitStore.get(key) || { count: 0, first: now }
+  if (now - entry.first > RATE_LIMIT_WINDOW_MS) {
+    entry.count = 1
+    entry.first = now
+    rateLimitStore.set(key, entry)
+    return { ok: true }
+  }
+  entry.count++
+  rateLimitStore.set(key, entry)
+  if (entry.count > RATE_LIMIT_MAX) return { ok: false, retryAfter: Math.ceil((entry.first + RATE_LIMIT_WINDOW_MS - now) / 1000) }
+  return { ok: true }
+}
 
 async function validatePassword(pwd){
   if (typeof pwd !== 'string') return false
@@ -19,9 +39,13 @@ async function validatePassword(pwd){
 module.exports = async (req, res) => {
   await connect()
   if (req.method !== 'POST') return res.status(405).end()
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || ''
+  const rl = checkRateLimit(`register:${ip}`)
+  if (!rl.ok) return res.status(429).setHeader('Retry-After', String(rl.retryAfter)).json({ message: 'Trop de requêtes, réessayer plus tard' })
+
   const { email, name, password, consent } = req.body || {}
   if (!consent) return res.status(400).json({ message: 'Consentement requis' })
-  if (!email || !validator.isEmail(email)) return res.status(400).json({ message: 'Email invalide' })
+  if (!email || !validator.isEmail(String(email))) return res.status(400).json({ message: 'Email invalide' })
   if (!name || typeof name !== 'string') return res.status(400).json({ message: 'Nom requis' })
   if (!validatePassword(password)) return res.status(400).json({ message: 'Mot de passe non conforme (>=12 chars et 3 catégories)' })
 
@@ -32,21 +56,36 @@ module.exports = async (req, res) => {
     const salt = await bcrypt.genSalt(12)
     const passwordHash = await bcrypt.hash(password, salt)
 
-    const user = new User({ email, name, passwordHash })
+    const safeName = validator.escape(String(name))
+    const user = new User({ email, name: safeName, passwordHash })
     await user.save()
 
     // issue JWT cookie
-    const token = jwt.sign({ id: user._id, role: user.role, tokenVersion: user.tokenVersion }, process.env.JWT_SECRET || 'devsecret', { expiresIn: '30m' })
+    const JWT_SECRET = process.env.JWT_SECRET
+    if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+      console.error('JWT_SECRET not set in production')
+      return res.status(500).json({ message: 'Configuration serveur manquante' })
+    }
+    const token = jwt.sign({ id: user._id, role: user.role, tokenVersion: user.tokenVersion }, JWT_SECRET || 'devsecret', { expiresIn: '15m' })
     const isProd = process.env.NODE_ENV === 'production'
-    res.setHeader('Set-Cookie', cookie.serialize('token', token, {
+    const csrfToken = crypto.randomBytes(24).toString('hex')
+    const cookieToken = cookie.serialize('token', token, {
       httpOnly: true,
       secure: isProd,
       sameSite: 'strict',
       path: '/',
-      maxAge: 30 * 60
-    }))
+      maxAge: 15 * 60
+    })
+    const csrfCookie = cookie.serialize('csrfToken', csrfToken, {
+      httpOnly: false,
+      secure: isProd,
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 15 * 60
+    })
+    res.setHeader('Set-Cookie', [cookieToken, csrfCookie])
 
-    return res.status(201).json({ ok: true })
+    return res.status(201).json({ ok: true, csrfToken })
   } catch (err) {
     console.error(err)
     return res.status(500).json({ message: 'Erreur serveur' })
