@@ -10,6 +10,9 @@ const UserSchema = new mongoose.Schema({
   consentDate: { type: Date },
   deleted: { type: Boolean, default: false },
   deletedAt: { type: Date },
+  // Security fields for lockout / session invalidation
+  failedLoginAttempts: { type: Number, default: 0 },
+  lockUntil: { type: Date, default: null },
   tokenVersion: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
 })
