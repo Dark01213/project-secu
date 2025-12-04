@@ -180,7 +180,94 @@ Corrigez les vulnérabilités critiques en priorisant la mise à jour de `next` 
 
 ---
 
-Si vous voulez que je :
-- commit/push ce `README.md` pour vous (je peux),
-- ajoute des sections supplémentaires (architecture, diagrammes, CI),
-- ou génère une checklist d'audit remplie automatiquement à partir des fichiers du repo — dites lequel et je le fais.
+**Audit artifacts (preuves)**
+
+Les fichiers suivants contiennent les preuves et sorties de test produites pendant l'audit. Ils sont stockés dans le dossier `audits/` à la racine du projet :
+
+- `audits/npm-audit.json`, `audits/npm-audit-after-next.json`, `audits/npm-audit-postfix.json`, `audits/npm-audit.txt` : rapports `npm audit` avant/après remédiation (montre l'absence de vulnérabilités critiques après corrections).
+- `audits/npm-build.txt` : sortie du `npm run build` (Next.js build réussi).
+- `audits/create-manager.txt` : sortie du script `scripts/create-manager.js` (création / existence du compte manager).
+- `audits/seed-todos.txt` : sortie du script `scripts/seed-todos.js` (création de l'utilisateur seed et d'un todo de test).
+- `audits/reset-user-password.txt` : sortie du script `scripts/reset-user-password.js` (réinitialisation du mot de passe du compte de test).
+- `audits/admin-access-http.txt` et `audits/admin-access.txt` : résultats des vérifications d'accès aux endpoints admin (anonyme / user / manager).
+- `audits/smoke-flow-https.txt` : sortie du smoke-flow exécuté sur `https://localhost:3443` (preuve que le flux fonctionne en HTTPS local via proxy TLS).
+- `audits/xss-http.txt` et `audits/xss-test.txt` : sorties des tests XSS et tentatives contrôlées (montre que les entrées sont échappées et que la protection CSRF bloque les requêtes non autorisées).
+- `audits/list-users.txt` : listing des utilisateurs présents dans la base (preuve des comptes de test).
+- `audits/git-branch.txt`, `audits/git-last-commit.txt` : informations Git (branche utilisée `fix/npm-audit`, derniers commits appliqués pendant l'audit).
+- `audits/gitignore.txt` : capture montrant que `.env` et fichiers sensibles sont listés dans `.gitignore`.
+- `audits/package.json.txt` : capture du `package.json` installé / scripts (utile pour reproduire les commandes `dev:https`, etc.).
+
+- `audits/file-upload.txt` : résultat de la recherche d'éventuels endpoints d'upload (N/A si aucun trouvé).
+- `audits/xss-final.txt` : sortie du test XSS final exécuté pendant l'audit.
+- `audits/evidence.zip` : archive contenant les preuves produites pendant l'audit (optionnelle).
+- `audits/git-push.txt` : sortie du `git push` des commits récents.
+- `audits/key-removal.txt` : trace de la suppression de `localhost-key.pem` et de la réécriture d'historique locale.
+
+Comment utiliser ces preuves :
+- Ouvrez `audits/` et retrouvez les fichiers listés ci-dessus. Chaque fichier contient la sortie console complète de l'action correspondante.
+- Joignez ces fichiers au rapport d'audit ou incluez des extraits (logs ou captures d'écran) dans un rapport PDF si nécessaire.
+
+Si tu veux, je peux aussi :
+- regrouper ces preuves dans un sous-dossier `audits/evidence.zip` (archive) prêt à envoyer ;
+- ou générer des captures d'écran automatiques pour les éléments nécessitant une preuve visuelle (ex: page HTTPS sans avertissement dans un navigateur supporté).
+
+## Sécurité des clés locales (certificats / fichiers .pem)
+
+Les fichiers de certificats locaux (`localhost.pem`, `localhost-key.pem`) servent uniquement au développement local. Ils doivent être traités comme des secrets : ne pas les committer, restreindre l'accès et les regénérer si compromise.
+
+Bonnes pratiques et commandes (PowerShell) :
+
+- Vérifier si la clé privée est suivie par Git :
+```powershell
+git ls-files --full-name | Select-String 'localhost-key.pem'
+```
+- Si la clé est suivie : la retirer de l'index Git **local** (ne supprime pas le fichier local) puis committer la suppression :
+```powershell
+git rm --cached localhost-key.pem
+git commit -m "chore(security): remove local private key from repo"
+```
+- Ajouter les fichiers de certificats à `.gitignore` si ce n'est pas déjà fait :
+```powershell
+Add-Content -Path .gitignore -Value "localhost-key.pem";
+Add-Content -Path .gitignore -Value "localhost.pem";
+git add .gitignore; git commit -m "chore: ignore local cert files"
+```
+- Restreindre les permissions (ACL) du fichier pour l'utilisateur courant :
+```powershell
+$u = whoami
+icacls .\localhost-key.pem /inheritance:r
+icacls .\localhost-key.pem /grant:r "$u:(R,W)"
+```
+- Si la clé a été committée dans l'historique Git, purger l'historique est nécessaire (outil recommandé : `git filter-repo` ou `BFG`). C'est une opération disruptive — coordonnez avec votre remote avant de forcer un push.
+
+Alternatives recommandées :
+- Utiliser `mkcert` pour créer un certificat local de confiance (recommandé pour navigateur sans avertissement) : `mkcert -key-file localhost-key.pem -cert-file localhost.pem localhost 127.0.0.1 ::1`.
+- Pour CI ou usages partagés, stocker les certificats/clefs dans un coffre de secrets (Azure Key Vault, AWS Secrets Manager, GitHub Actions secrets), ou utiliser des certificats temporaires.
+
+Si tu veux, j'ai ajouté un script PowerShell d'aide `scripts/secure-local-key.ps1` pour automatiser les vérifications et actions (vérifier la présence dans git, ajouter à .gitignore, retirer de l'index et appliquer ACL restreintes). Exécute-le en ouvrant PowerShell depuis la racine du projet :
+```powershell
+.\scripts\secure-local-key.ps1
+```
+
+## Nettoyage du dépôt et instructions pour les contributeurs
+
+Pendant l'audit, la clé privée locale `localhost-key.pem` a été retirée de l'index Git et purgée de l'historique local. Un push forcé a été effectué pour nettoyer le remote. Les traces sont dans `audits/key-removal.txt` et `audits/git-push.txt`.
+
+Si tu es un contributeur ayant un clone local du dépôt, synchronise-toi ainsi (attention : ces commandes replacent votre branche locale sur l'état distant) :
+
+```powershell
+# Mettre à jour les refs
+git fetch origin
+
+# Pour chaque branche locale que tu utilises, soit tu la recrées depuis le remote :
+git switch main
+git reset --hard origin/main
+
+# Supprime les fichiers non suivis (optionnel, sauvegarder d'abord)
+git clean -fd
+```
+
+Si tu as des branches locales avec des commits que tu veux conserver, sauvegarde-les (par exemple en créant un patch ou en poussant vers un remote privé) avant d'exécuter le `reset --hard`.
+
+Les artefacts d'audit sont dans `audits/` et une archive `audits/evidence.zip` a été générée pour faciliter l'envoi.
+
