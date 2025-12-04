@@ -41,6 +41,8 @@ if ($found) {
 }
 
 Write-Host 'Running smoke-flow script against' $env:BASE
+$env:NODE_TLS_REJECT_UNAUTHORIZED = '0'
+Write-Host 'NODE_TLS_REJECT_UNAUTHORIZED=' $env:NODE_TLS_REJECT_UNAUTHORIZED
 node scripts/smoke-flow.js
 $rc = $LASTEXITCODE
 if ($rc -eq 0) {
