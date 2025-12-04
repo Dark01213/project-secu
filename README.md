@@ -1,101 +1,120 @@
 # Secure TODO (Projet Fil Rouge)
 
-Minimal Next.js application focused on implementing required security constraints for the course assignment.
+Ce projet est une application de gestion de tâches (TODO) développée pour le "Projet Fil Rouge". Il sert d'exemple pédagogique pour montrer
+comment appliquer des mesures de sécurité essentielles (authentification sécurisée, hachage des mots de passe, protections XSS/CSRF, contrôle
+d'accès) et pour fournir des preuves d'audit reproductibles.
+
+Résumé rapide — ce que vous trouverez ici :
+- Guide de démarrage (installation, variables d'environnement)
+- Procédure pour activer HTTPS localement (mkcert + proxy TLS)
+- Instructions pour exécuter MongoDB en local (Docker ou local)
+- Scripts utilitaires pour seed, tests et vérifications de sécurité
+
+Sujet du projet
+---------------
+
+Créer une application TODO sécurisée qui démontre :
+- Authentification JWT avec rôles (`MANAGER`, `USER`)
+- Stockage sécurisé des mots de passe (`bcrypt`)
+- Protection contre XSS et CSRF
+- Bonnes pratiques pour la gestion des secrets et la configuration locale
+
+Stack technique
+---------------
+
+- Langage : JavaScript (Node.js)
+- Framework : Next.js (React)
+- Base de données : MongoDB
+- Auth : JWT + cookies HttpOnly; `bcrypt` pour le hashing
+- Outils locaux recommandés : `mkcert`, `local-ssl-proxy`, Docker / docker-compose
+
+Prérequis
+---------
+
+- Node.js (>=16 recommandé)
+- npm (fourni avec Node.js)
+- MongoDB (local ou via URI) ou Docker Desktop
+- PowerShell (Windows) ou un shell compatible
+
+Installer les langages et outils (Windows / Linux / macOS)
+
+Suivez la section correspondant à votre OS. Ces commandes installent Node.js, Git, MongoDB, Docker (optionnel) et mkcert.
+
+Windows (Chocolatey)
+
+```powershell
+# Installer Chocolatey (si absent)
+Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+# Installer outils principaux
+choco install -y nodejs-lts git mongodb-community docker-desktop mkcert
+
+# Après installation, redémarrer PowerShell/ordinateur si demandé
+```
+
+Ubuntu / Debian
+
+```bash
+sudo apt update
+sudo apt install -y curl git build-essential
+# Node.js LTS
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# MongoDB (exemple simple)
+sudo apt install -y mongodb
+
+# Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+```
+
+macOS (Homebrew)
+
+```bash
+# Installer Homebrew (si nécessaire)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Installer outils
+brew install node git mongodb-community docker mkcert
+mkcert -install
+```
+
+Notes : `npm` est inclus avec Node.js. Exécutez `node -v` et `npm -v` pour vérifier l'installation.
 
 Quick start
 
-1. Copy `.env.example` to `.env` and fill values (`MONGODB_URI`, `JWT_SECRET`).
-2. Install deps:
-
-```powershell
-npm install
-```
-
-3. Run locally (dev):
-
-```powershell
-# Projet Sécurité — Installation et guide
-
-Ce README couvre l'installation locale, les variables d'environnement requises et les commandes utiles. Il résume aussi la section **10.1 README & Documentation** de la checklist d'audit.
-
-**But du projet**: application de gestion de TODOs avec rôles (MANAGER / USER), authentification JWT, protection CSRF et audit de sécurité.
-
-**Prérequis**
-- Node.js (>=16 recommandé)
-- npm
-- MongoDB accessible (localement ou via URI)
-- PowerShell (Windows) ou un shell compatible
-
-**Installation locale**
-- Copier l'exemple d'environnement et installer les dépendances :
+1. Copier l'exemple d'environnement et éditer :
 
 ```powershell
 copy .env.example .env
 notepad .env
-# remplir les variables dans .env (voir section Variables d'environnement)
+# remplir les variables requises (MONGODB_URI, JWT_SECRET, etc.)
+```
+
+2. Installer les dépendances :
+
+```powershell
 npm install
 ```
 
-- Démarrer l'application en mode développement :
+3. Démarrer en développement :
 
 ```powershell
 npm run dev
 ```
 
-ou pour production locale (build + start) :
+Scripts utiles (présents dans `scripts/`) :
 
 ```powershell
-npm run build
-npm start
-```
-
-**Variables d'environnement importantes**
-- `MONGODB_URI` : URI MongoDB (ex: `mongodb://127.0.0.1:27017/secure-todo`)
-- `JWT_SECRET` : secret JWT fort (NE JAMAIS LE COMMITER)
-- `NODE_ENV` : `development` ou `production`
-- `NEXT_PUBLIC_BASE_URL` / `BASE` : URL de base (ex: `http://localhost:3000`)
-
-Variables ajoutées pour les scripts de test/seed (exemples dans `.env.example`) :
-- `MANAGER_EMAIL`, `MANAGER_PASSWORD`
-- `SEED_USER_EMAIL`, `SEED_USER_PASSWORD`
-- `SEED_PASSWORD`
-
-Remarque : ne placez pas de secrets réels dans le dépôt. Utilisez `.env` local ou les secrets de votre CI/CD.
-
-**Commandes et scripts utiles**
-- Créer un manager (doit définir `MANAGER_PASSWORD`) :
-
-```powershell
-node scripts/create-manager.js
-```
-
-- Réinitialiser le mot de passe du manager :
-
-```powershell
-node scripts/reset-manager-password.js
-```
-
-- Vérifier le mot de passe manager (test) :
-
-```powershell
-node scripts/check-manager-pw.js
-```
-
-- Seed (crée un utilisateur de test + un todo) :
-
-```powershell
+# seed (crée un utilisateur de test + un todo)
 node scripts/seed-todos.js
-```
 
-- Smoke-flow (flux end-to-end manager→création→user) :
-
-```powershell
+# smoke-flow (flux end-to-end manager→création→user)
 node scripts/smoke-flow.js
-```
 
-- Test de login simple :
-
-```powershell
+# test de login simple
 node scripts/test-login.js
 ```
 
@@ -125,19 +144,40 @@ mkcert -install
 mkcert -key-file localhost-key.pem -cert-file localhost.pem localhost 127.0.0.1 ::1
 ```
 
-3. Installer la dépendance de développement `local-ssl-proxy` et `concurrently` (déjà ajoutées au `package.json`), puis lancer le mode HTTPS :
+
+Lancer le site en HTTPS sur `localhost` — procédure pas-à-pas
+--------------------------------------------------------
+
+Procédure rapide et reproductible (PowerShell) :
+
+1) Générer les certificats locaux avec `mkcert` :
 
 ```powershell
-npm install
-npm run dev:https
+choco install mkcert -y
+mkcert -install
+mkcert -key-file localhost-key.pem -cert-file localhost.pem localhost 127.0.0.1 ::1
 ```
 
-Le script `dev:https` démarre Next sur `http://localhost:3000` et un proxy HTTPS sur `https://localhost:3443` (utilisant `localhost.pem` et `localhost-key.pem`). Ouvrez `https://localhost:3443` pour accéder à l'application en HTTPS.
+2) Démarrer Next.js en HTTP (terminal 1) :
 
-Remarques:
-- `mkcert -install` ajoute l'autorité locale aux magasins de certificats de confiance de votre OS/ navigateurs (évite les avertissements). Si vous utilisez Firefox, mkcert installe aussi le certif dans le magasin NSS si `nss` est disponible.
-- Les certificats générés sont destinés uniquement à un usage local.
-- Si vous préférez, vous pouvez utiliser un nom de domaine personnalisé (ex: `local.project.test`) et générer le certificat pour ce nom — pensez à ajouter l'entrée à votre `hosts`.
+```powershell
+npm run dev
+```
+
+3) Démarrer le proxy TLS (terminal 2) :
+
+```powershell
+npx local-ssl-proxy --source 3443 --target 3000 --cert localhost.pem --key localhost-key.pem
+```
+
+4) Ouvrez `https://localhost:3443` dans le navigateur. Si `mkcert` a été installé correctement, le certificat local sera approuvé par votre OS/browser et il n'y aura pas d'avertissement.
+
+Dépannage rapide :
+- `ECONNREFUSED` : vérifier que `npm run dev` est bien lancé et écoute sur le port 3000.
+- Erreur de certificat : relancer `mkcert -install` en mode administrateur et re-générer les certificats.
+- Pour tests rapides avec `curl` (si certificat non approuvé) : `curl.exe -k https://localhost:3443/`
+
+Si tu veux, je peux :
 
 Si vous voulez, je peux :
 - ajouter automatiquement les scripts `npm` (fait) et commit/push la modification (je peux le faire),
@@ -215,30 +255,13 @@ Si tu veux, je peux aussi :
 
 Les fichiers de certificats locaux (`localhost.pem`, `localhost-key.pem`) servent uniquement au développement local. Ils doivent être traités comme des secrets : ne pas les committer, restreindre l'accès et les regénérer si compromise.
 
-Bonnes pratiques et commandes (PowerShell) :
+Bonnes pratiques et recommandations :
 
-- Vérifier si la clé privée est suivie par Git :
-```powershell
-git ls-files --full-name | Select-String 'localhost-key.pem'
-```
-- Si la clé est suivie : la retirer de l'index Git **local** (ne supprime pas le fichier local) puis committer la suppression :
-```powershell
-git rm --cached localhost-key.pem
-git commit -m "chore(security): remove local private key from repo"
-```
-- Ajouter les fichiers de certificats à `.gitignore` si ce n'est pas déjà fait :
-```powershell
-Add-Content -Path .gitignore -Value "localhost-key.pem";
-Add-Content -Path .gitignore -Value "localhost.pem";
-git add .gitignore; git commit -m "chore: ignore local cert files"
-```
-- Restreindre les permissions (ACL) du fichier pour l'utilisateur courant :
-```powershell
-$u = whoami
-icacls .\localhost-key.pem /inheritance:r
-icacls .\localhost-key.pem /grant:r "$u:(R,W)"
-```
-- Si la clé a été committée dans l'historique Git, purger l'historique est nécessaire (outil recommandé : `git filter-repo` ou `BFG`). C'est une opération disruptive — coordonnez avec votre remote avant de forcer un push.
+- Vérifier que vos clés privées locales (ex: fichiers .pem) ne sont pas suivies par Git. Si une clé a été ajoutée par erreur, retirez-la de l'index et ajoutez son nom au `.gitignore` sans inclure le contenu du fichier dans le dépôt.
+- Restreindre l'accès au fichier clé sur la machine locale (utiliser les outils du système pour limiter les permissions au minimum nécessaire).
+- Si une clé privée a été poussée dans l'historique Git, coordonnez-vous avec les responsables du dépôt avant de purger l'historique (opérations disruptives comme `git filter-repo` ou `bfg`), et informez les contributeurs des étapes de resynchronisation.
+
+Remarque : les exemples de commandes d'administration sont volontairement omis ici pour éviter de divulguer des chemins ou méthodes pouvant être sensibles. Utilisez vos procédures internes ou demandez si vous souhaitez des commandes adaptées à votre environnement.
 
 Alternatives recommandées :
 - Utiliser `mkcert` pour créer un certificat local de confiance (recommandé pour navigateur sans avertissement) : `mkcert -key-file localhost-key.pem -cert-file localhost.pem localhost 127.0.0.1 ::1`.
