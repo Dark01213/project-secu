@@ -1,0 +1,26 @@
+Final Audit Summary - Checklist continuation
+Date: 2025-12-04
+
+Summary:
+- Secrets removal: localhost-key.pem removed from repo and history. Proof: audits/key-removal.txt
+- .gitignore updated to exclude local certs and audit archive. Proof: audits/gitignore.txt
+- HTTPS local smoke-flow: attempted but connection refused (dev server / proxy not running). Proof: audits/smoke-flow-https.txt
+- XSS final run: attempted but connection refused (dev server / proxy not running). Proof: audits/xss-final.txt
+- Upload handlers: repository scan completed; no application-level upload endpoints found. Proof: audits/file-upload.txt
+- Dependency audit: npm audit outputs saved. Proofs: audits/npm-audit.json, audits/npm-audit-after-next.json, audits/npm-audit.txt
+- Password storage: bcrypt used. Proofs: audits/seed-todos.txt, audits/reset-user-password.txt
+- CSRF and security headers: present and tested where reachable. Proofs: audits/xss-http.txt, audits/smoke-flow-https.txt
+- Git push and commits: normal push and earlier force-push traces saved. Proofs: audits/git-push-readme.txt, audits/git-push.txt
+- Archive of artifacts: audits/evidence.zip (contains audit outputs)
+
+Remaining manual checks recommended (not yet proven automatically):
+- RGPD / privacy page: add `/privacy` or `/legal` and capture screenshot as proof.
+- Password policy (12+ and complexity): confirm signup validation and capture form/server validation outputs.
+
+Next actions available (pick one):
+1) I try to start the dev server + TLS proxy here and re-run the smoke-flow and XSS tests to obtain successful E2E proofs. (May require filling `.env` or running mkcert.)
+2) You start the dev server and proxy locally and I re-run the tests to capture green outputs.
+3) Proceed with current artifacts and finalize the checklist report (I can generate PDF/archive now).
+
+
+Files produced or updated: see `audits/` folder.
