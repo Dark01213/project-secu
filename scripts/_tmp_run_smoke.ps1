@@ -18,16 +18,27 @@ foreach ($line in $lines) {
 }
 Write-Host 'BASE=' $env:BASE
 
-# Wait for server to be ready (max 30s)
-$ready = $false
-for ($i=0; $i -lt 30; $i++) {
-  try {
-    $r = Invoke-WebRequest -Uri $env:BASE -UseBasicParsing -TimeoutSec 3
-    if ($r.StatusCode -eq 200) { $ready = $true; break }
-  } catch { }
-  Start-Sleep -Seconds 1
+# Try a list of candidate base URLs (prefer HTTPS), pick the first that responds
+$candidates = @($env:BASE, 'https://localhost:3443', 'http://localhost:3000', 'http://localhost:3001') | Where-Object { $_ -ne $null }
+$found = $null
+foreach ($candidate in $candidates) {
+  Write-Host "Probing $candidate ..."
+  for ($i=0; $i -lt 10; $i++) {
+    try {
+      $r = Invoke-WebRequest -Uri $candidate -UseBasicParsing -TimeoutSec 3
+      if ($r.StatusCode -ge 200 -and $r.StatusCode -lt 400) { $found = $candidate; break }
+    } catch { }
+    Start-Sleep -Seconds 1
+  }
+  if ($found) { break }
 }
-if (-not $ready) { Write-Host 'Warning: server not responding at' $env:BASE }
+if ($found) {
+  $env:BASE = $found
+  Write-Host 'Using base URL:' $env:BASE
+} else {
+  Write-Host 'Warning: no responsive server found for candidates:'
+  $candidates | ForEach-Object { Write-Host " - $_" }
+}
 
 Write-Host 'Running smoke-flow script against' $env:BASE
 node scripts/smoke-flow.js
