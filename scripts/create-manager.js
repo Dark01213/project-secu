@@ -6,11 +6,7 @@ async function main(){
   await connect()
   const email = process.env.MANAGER_EMAIL || 'manager@example.com'
   const name = process.env.MANAGER_NAME || 'Manager'
-  const password = process.env.MANAGER_PASSWORD
-  if (!password){
-    console.error('Missing MANAGER_PASSWORD environment variable. Set it or create a `.env` file from `.env.example`.')
-    process.exit(2)
-  }
+  const password = process.env.MANAGER_PASSWORD || 'StrongPassw0rd!'
 
   const existing = await User.findOne({ email })
   if (existing){
@@ -28,7 +24,7 @@ async function main(){
   const user = new User({ email, name, passwordHash, role: 'MANAGER', consentGiven: true, consentDate: new Date() })
   await user.save()
   console.log('Manager created:', email)
-  console.log('Manager account created. Set a secure password via environment variables or password-reset.')
+  console.log('Password:', password)
   process.exit(0)
 }
 

@@ -2,15 +2,6 @@ const fetch = global.fetch || require('node-fetch')
 
 const BASE = process.env.BASE || 'http://localhost:3000'
 
-const managerEmail = process.env.MANAGER_EMAIL
-const managerPassword = process.env.MANAGER_PASSWORD
-const seedEmail = process.env.SEED_USER_EMAIL
-const seedPassword = process.env.SEED_USER_PASSWORD
-if (!managerEmail || !managerPassword || !seedEmail || !seedPassword){
-  console.error('Missing environment variables. Please set MANAGER_EMAIL, MANAGER_PASSWORD, SEED_USER_EMAIL and SEED_USER_PASSWORD (or create a `.env` from `.env.example`).')
-  process.exit(2)
-}
-
 function getCookieHeader(setCookieHeader){
   if (!setCookieHeader) return ''
   if (Array.isArray(setCookieHeader)) setCookieHeader = setCookieHeader.join('; ')
@@ -44,24 +35,15 @@ async function run(){
 
   // Manager login
   console.log('Logging in manager...')
-  let resp = await post('/api/auth/login', { email: managerEmail, password: managerPassword })
+  let resp = await post('/api/auth/login', { email: 'manager@example.com', password: 'StrongPassw0rd!' })
   console.log('Login status', resp.status)
   if (!resp.setCookie) { console.warn('No set-cookie returned for manager login') }
   let cookie = getCookieHeader(resp.setCookie)
-  const managerCsrf = resp.body && resp.body.csrfToken
-  console.log('Cookie header: %s', cookie ? '<present>' : '<missing>')
+  console.log('Cookie header:', cookie)
 
   // Create todolist
   console.log('Creating todolist...')
-  // include CSRF token returned by login in the header
-  const headers = { 'Content-Type': 'application/json', 'Cookie': cookie }
-  if (managerCsrf) headers['x-csrf-token'] = managerCsrf
-  let r = await fetch(BASE + '/api/todolists', { method: 'POST', headers, body: JSON.stringify({ title: 'Equipe Beta', description: 'Créée par smoke-flow', memberEmails: ['seeduser@example.com'] }) })
-  const setCookie = r.headers.get('set-cookie') || r.headers.get('Set-Cookie')
-  const text = await r.text()
-  let json = null
-  try{ json = JSON.parse(text) }catch(e){ json = text }
-  resp = { status: r.status, ok: r.ok, body: json, setCookie }
+  resp = await post('/api/todolists', { title: 'Equipe Beta', description: 'Créée par smoke-flow', memberEmails: ['seeduser@example.com'] }, cookie)
   console.log('Create list status', resp.status)
   console.log('Body:', resp.body)
 
@@ -72,10 +54,10 @@ async function run(){
 
   // Login as seed user
   console.log('Logging in seed user...')
-  resp = await post('/api/auth/login', { email: seedEmail, password: seedPassword })
+  resp = await post('/api/auth/login', { email: 'seeduser@example.com', password: 'SeedPass123!' })
   console.log('Login status', resp.status)
   let userCookie = getCookieHeader(resp.setCookie)
-  console.log('User cookie: %s', userCookie ? '<present>' : '<missing>')
+  console.log('User cookie:', userCookie)
 
   // Fetch lists as user
   console.log('Fetching lists as user...')

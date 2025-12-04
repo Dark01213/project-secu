@@ -9,17 +9,13 @@ async function run(){
     console.log('Connected to MongoDB')
 
     const email = process.env.SEED_EMAIL || 'seeduser@example.com'
-    const password = process.env.SEED_PASSWORD
-    if (!password){
-      console.error('Missing SEED_PASSWORD environment variable. Set it or create a `.env` file from `.env.example`.')
-      process.exit(2)
-    }
+    const password = process.env.SEED_PASSWORD || 'SeedPass123!'
 
     let user = await User.findOne({ email })
     if (!user){
       const passwordHash = await bcrypt.hash(password, 10)
       user = await User.create({ email, name: 'Seed User', passwordHash, consentGiven: true, consentDate: new Date() })
-      console.log('Created user:', email)
+      console.log('Created user:', email, 'password:', password)
     } else {
       console.log('User already exists:', email)
     }
