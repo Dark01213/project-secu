@@ -198,6 +198,80 @@ Preuves / éléments à fournir pour l'audit (10.1) :
 - `.env.example` fourni (présent dans le repo).
 - Scripts de seed/test documentés (listés ci-dessus).
 
+**HTTPS local — Guide détaillé pour preuves (Checklist 1.3 & 1.2)**
+
+Objectif : pouvoir accéder à l'application en `https://localhost:XXXX` sans avertissement, et produire des preuves (capture écran + certificat visible) pour l'audit.
+
+- Pré-requis : `mkcert` (ou équivalent) et accès à PowerShell (Windows). Ne committez JAMAIS les clés privées (`localhost-key.pem`) dans le dépôt.
+
+Étapes recommandées (Windows / PowerShell)
+
+1) Installer `mkcert` (si nécessaire) :
+
+```powershell
+choco install mkcert -y
+mkcert -install
+```
+
+2) Générer un certificat local (fichiers : `localhost.pem` et `localhost-key.pem`) :
+
+```powershell
+mkcert -key-file localhost-key.pem -cert-file localhost.pem localhost 127.0.0.1 ::1
+```
+
+3) Lancer votre application en HTTP (port 3000 par défaut) :
+
+```powershell
+# En développement
+npm run dev
+
+# Ou en production (si vous voulez tester la page d'erreur production)
+npm run build; npx next start -p 3000
+```
+
+4) Exposer HTTPS local via un petit proxy TLS (exemple avec `local-ssl-proxy`) :
+
+```powershell
+npx local-ssl-proxy --source 3443 --target 3000 --cert localhost.pem --key localhost-key.pem
+```
+
+Si `local-ssl-proxy` pose problème sur votre machine, une alternative (node proxy léger) est fournie dans `scripts/https-proxy.js` :
+
+```powershell
+# Démarrer le proxy Node fourni (si vous préférez ne pas utiliser npx local-ssl-proxy)
+node scripts/https-proxy.js
+```
+
+5) Ouvrir le navigateur sur : `https://localhost:3443`
+
+Preuves à capturer pour l'audit (Checklist) :
+- Capture 1 : la page `https://localhost:3443` ouverte dans le navigateur montrant l'URL (barre d'adresse) et absence d'avertissement.
+- Capture 2 : fenêtre du certificat (clic sur le cadenas → Détails/Certificate) montrant `Subject` et `Issuer` (le certificat local mkcert) et les dates de validité.
+- Preuve serveur (interne) : le fichier de logs où l'erreur est enregistrée (`audits/server.log`) ou un fichier généré par le proxy (`audits/https-proxy.log`).
+- `.env.production` : capture montrant `NODE_ENV=production` (REMPLACEZ/REDACTEZ toute valeur sensible avant d'envoyer la capture).
+
+Commandes utiles pour collecter preuves (PowerShell)
+
+```powershell
+# Sauvegarder la page HTTPS (pour preuve) avec curl (ignore le certificat si nécessaire)
+curl.exe -k -o .\audits\https-page.html https://localhost:3443/
+
+# Extraire les infos du certificat (Node.js utilitaire, génère audits/cert-info.json)
+node -e "const tls=require('tls'),fs=require('fs'); const s=tls.connect(3443,{host:'localhost',rejectUnauthorized:false},()=>{fs.writeFileSync('audits/cert-info.json',JSON.stringify(s.getPeerCertificate(true),null,2)); s.end();});"
+
+# Suivre le log du proxy en temps réel
+Get-Content .\audits\https-proxy.log -Wait -Tail 50
+```
+
+Bonnes pratiques (sécurité & RGPD)
+
+- Ne commitez JAMAIS `localhost-key.pem` ni d'autres clés privées. Ajoutez-les au `.gitignore` si nécessaire.
+- Si vous partagez des captures contenant des fichiers `.env` ou logs, remplacez les valeurs sensibles par `REDACTED` (ex: `JWT_SECRET=REDACTED`).
+- Supprimez toute route de test temporaire (ex: `pages/api/trigger-prod-error.js`) avant d'envoyer les artefacts finaux ou avant merge vers `main`.
+
+Si vous voulez que j'ajoute une section `audits/summary-mode-production.md` ou que j'automatise ces étapes via `scripts/setup-https.ps1`, dites-le et je l'ajouterai.
+
+
 **Dépannage rapide**
 - Si `npm run dev` échoue : vérifier `MONGODB_URI`, `JWT_SECRET` et que MongoDB est joignable.
 - Si un script signale l'absence d'une variable d'environnement, ouvrez ` .env` et renseignez-la.
