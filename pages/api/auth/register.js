@@ -84,17 +84,18 @@ module.exports = async (req, res) => {
     }
     const token = jwt.sign({ id: user._id, role: user.role, tokenVersion: user.tokenVersion }, JWT_SECRET || 'devsecret', { expiresIn: '15m' })
     const isProd = process.env.NODE_ENV === 'production'
+    const isSecure = isProd || req.headers['x-forwarded-proto'] === 'https' || (req.socket && req.socket.encrypted)
     const csrfToken = crypto.randomBytes(24).toString('hex')
     const cookieToken = cookie.serialize('token', token, {
       httpOnly: true,
-      secure: isProd,
+      secure: isSecure,
       sameSite: 'strict',
       path: '/',
       maxAge: 15 * 60
     })
     const csrfCookie = cookie.serialize('csrfToken', csrfToken, {
       httpOnly: false,
-      secure: isProd,
+      secure: isSecure,
       sameSite: 'strict',
       path: '/',
       maxAge: 15 * 60

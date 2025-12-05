@@ -17,17 +17,19 @@ module.exports = async (req, res) => {
   }catch(e){ /* ignore */ }
 
   // Clear authentication cookie and consent cookie to fully disconnect and limit tracking
+  const isProd = process.env.NODE_ENV === 'production'
+  const isSecure = isProd || req.headers['x-forwarded-proto'] === 'https' || (req.socket && req.socket.encrypted)
   const cookies = [
     cookie.serialize('token', '', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isSecure,
       sameSite: 'strict',
       path: '/',
       expires: new Date(0)
     }),
     cookie.serialize('consent', '', {
       httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isSecure,
       sameSite: 'strict',
       path: '/',
       expires: new Date(0)

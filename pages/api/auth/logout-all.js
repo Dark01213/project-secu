@@ -24,9 +24,11 @@ module.exports = async (req, res) => {
     }catch(e){ console.error('Failed to write audit log', e) }
 
     // clear cookie for current session
+    const isProd = process.env.NODE_ENV === 'production'
+    const isSecure = isProd || req.headers['x-forwarded-proto'] === 'https' || (req.socket && req.socket.encrypted)
     res.setHeader('Set-Cookie', cookie.serialize('token', '', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isSecure,
       sameSite: 'strict',
       path: '/',
       expires: new Date(0)
