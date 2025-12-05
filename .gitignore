@@ -1,3 +1,4 @@
+
 node_modules/
 .next/
 .env
@@ -11,3 +12,7 @@ cookies*.txt
 localhost-key.pem
 localhost.pem
 audits/evidence.zip
+
+# Local DB dumps and init helpers (ignore dumps and mongo init dir)
+dump/
+mongo-init/
