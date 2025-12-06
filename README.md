@@ -346,6 +346,16 @@ Si tu veux, j'ai ajouté un script PowerShell d'aide `scripts/secure-local-key.p
 .\scripts\secure-local-key.ps1
 ```
 
+Logs & Monitoring (recommandation)
+---------------------------------
+
+- **Fichiers de logs locaux** : les erreurs serveur sont écrites dans `logs/errors.log` via `lib/handleError.js`.
+- **Externaliser les logs en production** : utilisez un service centralisé (Logstash/Elasticsearch, Datadog, Papertrail, Azure Monitor) pour conserver et analyser les logs et configurer des rotations/ACL.
+- **Surveillez** : alertes sur les échecs d'authentification répétés, erreurs 5xx fréquentes, et utilisation anormale des endpoints d'upload.
+- **Rotation** : configurez logrotate ou la rotation côté service (par ex. une SaaS de logs) pour éviter la croissance illimitée des fichiers locaux.
+
+Ces recommandations sont appliquées partiellement dans le projet (écriture locale dans `logs/errors.log`) et documentées ici pour faciliter la mise en production.
+
 ## Nettoyage du dépôt et instructions pour les contributeurs
 
 Pendant l'audit, la clé privée locale `localhost-key.pem` a été retirée de l'index Git et purgée de l'historique local. Un push forcé a été effectué pour nettoyer le remote. Les traces sont dans `audits/key-removal.txt` et `audits/git-push.txt`.
