@@ -2,6 +2,7 @@ const { IncomingForm } = require('formidable')
 const fs = require('fs')
 const path = require('path')
 const { v4: uuidv4 } = require('uuid')
+const FileType = require('file-type')
 
 export const config = {
   api: {
@@ -20,6 +21,16 @@ module.exports = async (req, res) => {
     if (!file) return res.status(400).json({ message: 'No file uploaded' })
     const ext = path.extname(file.originalFilename || file.name || '') .toLowerCase()
     if (!ALLOWED_EXT.includes(ext)) return res.status(400).json({ message: 'Extension non autorisée' })
+    // Verify MIME type from file content
+    try {
+      const ft = await FileType.fromFile(file.filepath)
+      if (!ft) return res.status(400).json({ message: 'Impossible de détecter le type de fichier' })
+      const mimeOk = (ft.mime === 'image/jpeg' && ['.jpg', '.jpeg'].includes(ext)) || (ft.mime === 'image/png' && ext === '.png') || (ft.mime === 'application/pdf' && ext === '.pdf')
+      if (!mimeOk) return res.status(400).json({ message: 'Type MIME non autorisé' })
+    } catch(e) {
+      // fallback: deny
+      return res.status(400).json({ message: 'Erreur lors de la vérification du type de fichier' })
+    }
     // Move file to uploads/ with UUID name
     const uploadsDir = path.resolve(process.cwd(), 'uploads')
     if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true })
