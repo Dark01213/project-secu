@@ -39,7 +39,7 @@ module.exports = async (req, res) => {
     try {
       await fs.promises.copyFile(file.filepath, destPath)
       // remove temp
-      try { await fs.promises.unlink(file.filepath) } catch(e){}
+      try { await fs.promises.unlink(file.filepath) } catch(e){ console.warn('failed to remove temp file', e) }
       return res.status(201).json({ ok: true, filename: destName })
     } catch (e) {
       const { handleError } = require('../../../lib/handleError')

@@ -30,6 +30,14 @@
 
 - [ ] **Console des développeurs nettoyée** : Pas de `console.log()` révélant des infos sensibles
 
+Les éléments suivants ont été mis en place dans le code :
+- `lib/handleError.js` : centralise l'enregistrement des erreurs dans `logs/errors.log` et masque les détails en production.
+- Plusieurs routes (auth, DB) utilisent maintenant `handleError` au lieu de `console.error`.
+
+- [x] **Debug désactivé en production**
+- [x] **Logs des erreurs configurés**
+- [x] **Console des développeurs nettoyée (niveau serveur)**
+
 **Preuves attendues :**
 - Fichier `.env.production` ou configuration de production
 - Capture d'écran montrant une erreur anonyme (pas de Stack Trace)
@@ -267,6 +275,14 @@ Notes :
 
 - [ ] **Validation stricte** : Un token invalide = rejet de la requête
 
+Implémentation :
+- Ajout d'un helper `lib/csrf.js` pour générer et vérifier les tokens CSRF via `csrfToken` en cookie et l'en-tête `x-csrf-token`.
+- Le middleware existant continue d'exiger `x-csrf-token` pour les requêtes d'état; pour les formulaires côté serveur, utiliser `lib/csrf.js::setCsrfCookie` pour injecter le cookie et insérer un champ caché `csrf_token` dans le formulaire.
+
+- [x] **Un token CSRF unique par formulaire (ou session)**
+- [x] **Token généré à chaque page / session**
+- [x] **Validation stricte**
+
 **Preuves attendues :**
 - Inspect du formulaire montrant le champ CSRF
 - Code source montrant la génération et validation du token
@@ -284,6 +300,14 @@ Notes :
   - Empêche l'écrasement accidentel et l'exécution de scripts
 
 - [ ] **Stockage en dehors du web root** : Le fichier uploadé ne doit pas être accessible directement par URL
+
+Implémentation :
+- Ajout de l'endpoint `pages/api/upload.js` : whitelist d'extensions, vérification du type via `file-type`, renommage via `uuid`, stockage dans `uploads/` (hors du web root public).
+
+- [x] **Extension vérifiée (Liste blanche)**
+- [x] **Type MIME vérifié côté serveur**
+- [x] **Fichier renommé avec UUID**
+- [x] **Stockage en dehors du web root**
 
 **Preuves attendues :**
 - Code source montrant la validation d'extension et MIME
