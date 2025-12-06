@@ -101,7 +101,7 @@ module.exports = async (req, res) => {
 
     return res.json({ ok: true, csrfToken })
   } catch (err) {
-    console.error(err)
-    return res.status(500).json({ message: 'Erreur serveur' })
+    const { handleError } = require('../../../../lib/handleError')
+    return handleError(res, err, { meta: { route: '/api/auth/login' } })
   }
 }

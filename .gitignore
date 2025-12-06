@@ -11,6 +11,8 @@ npm-debug.log
 cookies*.txt
 localhost-key.pem
 localhost.pem
+logs/
+uploads/
 audits/evidence.zip
 
 # Local DB dumps and init helpers (ignore dumps and mongo init dir)

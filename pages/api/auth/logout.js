@@ -11,9 +11,12 @@ module.exports = async (req, res) => {
   try{
     const user = await getUserFromReq(req)
     // record audit even if unauthenticated (note: user may be null)
-    try{
-      await AuditLog.create({ user: user?._id, action: 'logout', ip: getIp(req), userAgent: req.headers['user-agent'] || '', meta: {} })
-    }catch(e){ console.error('Failed to write audit log', e) }
+      try{
+        await AuditLog.create({ user: user?._id, action: 'logout', ip: getIp(req), userAgent: req.headers['user-agent'] || '', meta: {} })
+      }catch(e){
+        const { logError } = require('../../../../lib/handleError')
+        logError(e, { route: '/api/auth/logout', user: user?._id })
+      }
   }catch(e){ /* ignore */ }
 
   // Clear authentication cookie and consent cookie to fully disconnect and limit tracking

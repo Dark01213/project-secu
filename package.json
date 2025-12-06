@@ -8,6 +8,7 @@
     "smoke": "node scripts/smoke-flow.js",
     "audit": "npm audit --json > audits/npm-audit.json",
     "seed": "node scripts/seed-admin.js",
+    "sast": "eslint . --ext .js,.jsx --max-warnings=0 || true",
     "build": "next build",
     "start": "next start -p 3000"
   },
@@ -26,6 +27,9 @@
     "concurrently": "^9.2.1",
     "local-ssl-proxy": "^2.0.5",
     "mongodb-memory-server": "^10.4.0",
-    "selfsigned": "^5.2.0"
+    "selfsigned": "^5.2.0",
+    "formidable": "^3.7.0",
+    "uuid": "^9.0.0",
+    "eslint": "^8.0.0"
   }
 }
