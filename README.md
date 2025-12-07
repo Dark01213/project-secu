@@ -99,6 +99,20 @@ notepad .env
 npm install
 ```
 
+2.a Démarrer MongoDB (Docker)
+
+Si vous n'avez pas de MongoDB local et que vous préférez utiliser Docker (recommandé pour un environnement isolé), démarrez une instance MongoDB avant de lancer l'application :
+
+```powershell
+# Démarrer une instance MongoDB détachée (port 27017 exposé localement)
+docker run -d --name project-secu-mongo -p 27017:27017 mongo:6.0
+
+# (optionnel) ou via docker-compose : créez un fichier `docker-compose.yml` avec une configuration Mongo et lancez
+docker-compose up -d
+```
+
+Assurez-vous que la variable d'environnement `MONGODB_URI` (ou le fallback `mongodb://127.0.0.1:27017/secure-todo`) est accessible avant de lancer `npm run dev`.
+
 3. Démarrer en développement :
 
 ```powershell

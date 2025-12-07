@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-try { require('dotenv').config() } catch(e) {}
+try { require('dotenv').config() } catch(e) { console.warn('dotenv not available') }
 const { connect } = require('../lib/mongodb')
 const User = require('../models/User')
 const bcrypt = require('bcryptjs')

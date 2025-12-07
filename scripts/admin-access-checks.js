@@ -36,7 +36,7 @@ async function login(email,password){
   const r = await doRequest('POST','/api/auth/login',{ body: { email,password } })
   const cookies = parseSetCookie(r.headers)
   let csrf = null
-  try { const j = JSON.parse(r.body); csrf = j.csrfToken } catch(e){}
+  try { const j = JSON.parse(r.body); csrf = j.csrfToken } catch(e){ console.warn('login parse JSON failed') }
   return { status: r.status, body: r.body, cookies, csrf }
 }
 
