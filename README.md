@@ -345,6 +345,59 @@ Si tu veux, j'ai ajouté un script PowerShell d'aide `scripts/secure-local-key.p
 ```powershell
 .\scripts\secure-local-key.ps1
 ```
+Vérification de la checklist — commandes et preuves
+-------------------------------------------------
+
+Pour vérifier rapidement que le projet respecte la checklist d'audit, exécutez les commandes suivantes depuis la racine du dépôt (PowerShell). Ces commandes génèrent des artefacts dans le dossier `audits/` que l'on peut joindre au rapport d'audit.
+
+Installation des dépendances :
+```powershell
+npm install
+```
+
+Exécuter l'analyse statique (SAST) avec ESLint et sauvegarder le rapport :
+```powershell
+npm run sast
+npx eslint . --ext .js,.jsx --format unix > audits/eslint-report.txt 2>&1
+```
+
+Audit des dépendances (npm) :
+```powershell
+npm audit --json > audits/npm-audit.json
+```
+
+Seeder (crée l'utilisateur administrateur) — s'assurer d'avoir un fichier `.env` (copier `.env.example` puis remplir) :
+```powershell
+# Copier l'exemple et remplir les variables ADMIN_EMAIL / ADMIN_PASSWORD
+copy .env.example .env
+notepad .env
+# Puis
+node scripts/seed-admin.js > audits/seed-admin.txt 2>&1
+```
+
+Exécuter le smoke-flow (tests end-to-end) — nécessite `MANAGER_EMAIL`, `MANAGER_PASSWORD`, `SEED_USER_EMAIL`, `SEED_USER_PASSWORD` dans `.env` :
+```powershell
+npm run smoke > audits/smoke-flow.txt 2>&1
+```
+
+Capturer les en-têtes `Set-Cookie` (PowerShell) — exemple de login :
+```powershell
+$body = @{ email = 'admin@example.test'; password = 'AdminPassw0rd!' } | ConvertTo-Json
+$resp = Invoke-WebRequest -Uri 'https://localhost:3443/api/auth/login' -Method POST -Body $body -ContentType 'application/json' -UseBasicParsing
+$resp.Headers['Set-Cookie'] | Out-File audits/set-cookie-headers.txt
+```
+
+Capturer la page HTTPS (si vous utilisez le proxy TLS local) :
+```powershell
+curl.exe -k -o .\audits\https-page.html https://localhost:3443/
+```
+
+Recommandations rapides pour produire des preuves conformes RGPD/CNIL :
+- Redigez/masquez toute donnée sensible dans les captures (`REDACTED`) avant de joindre des artefacts.
+- Ne partagez pas de fichiers de clés privées (`*.pem`) ni de `.env` contenant des secrets.
+- Si un secret a été poussé par erreur, suivez la procédure de purge d'historique en coordination avec l'équipe (backup branch avant réécriture).
+
+Ces commandes permettent de générer les preuves attendues dans la checklist (rapports SAST, npm audit, smoke-flow, headers Set-Cookie, captures HTTPS).
 
 Logs & Monitoring (recommandation)
 ---------------------------------
