@@ -21,12 +21,17 @@ module.exports = async (req, res) => {
     // record audit
     try{
       await AuditLog.create({ user: user._id, action: 'logout_all', ip: getIp(req), userAgent: req.headers['user-agent'] || '', meta: {} })
-    }catch(e){ console.error('Failed to write audit log', e) }
+    }catch(e){
+      const { logError } = require('../../../../lib/handleError')
+      logError(e, { route: '/api/auth/logout-all', user: user._id })
+    }
 
     // clear cookie for current session
+    const isProd = process.env.NODE_ENV === 'production'
+    const isSecure = isProd || req.headers['x-forwarded-proto'] === 'https' || (req.socket && req.socket.encrypted)
     res.setHeader('Set-Cookie', cookie.serialize('token', '', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isSecure,
       sameSite: 'strict',
       path: '/',
       expires: new Date(0)

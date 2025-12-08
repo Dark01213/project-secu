@@ -1,0 +1,15 @@
+   ▲ Next.js 16.0.7 (Turbopack)
+   - Local:         http://localhost:3000
+   - Network:       http://172.31.0.1:3000
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 858ms
+ POST /api/auth/login 500 in 1010ms (compile: 819ms, proxy.ts: 58ms, render: 133ms)
+ POST /api/auth/logout 200 in 10.6s (compile: 547ms, proxy.ts: 3ms, render: 10.0s)
+ POST /api/auth/login 500 in 23ms (compile: 13ms, proxy.ts: 4ms, render: 7ms)
+Starting in-memory MongoDB (mongodb-memory-server) for development...
+In-memory MongoDB started at mongodb://127.0.0.1:60656/
+ GET /api/todolists 401 in 30.8s (compile: 35ms, proxy.ts: 3ms, render: 30.8s)
+ POST /api/auth/logout 200 in 26ms (compile: 5ms, proxy.ts: 5ms, render: 15ms)
+[?25h

@@ -26,14 +26,26 @@ function checkRateLimit(key) {
 }
 
 async function validatePassword(pwd){
-  if (typeof pwd !== 'string') return false
-  if (pwd.length < 12) return false
+  const result = { ok: true, reasons: [] }
+  if (typeof pwd !== 'string') {
+    result.ok = false
+    result.reasons.push('Mot de passe requis')
+    return result
+  }
+  if (pwd.length < 12) {
+    result.ok = false
+    result.reasons.push('Au moins 12 caractères')
+  }
   let categories = 0
   if (/[A-Z]/.test(pwd)) categories++
   if (/[a-z]/.test(pwd)) categories++
   if (/[0-9]/.test(pwd)) categories++
   if (/[^A-Za-z0-9]/.test(pwd)) categories++
-  return categories >= 3
+  if (categories < 3) {
+    result.ok = false
+    result.reasons.push('Au moins 3 des 4 catégories : majuscules, minuscules, chiffres, symboles')
+  }
+  return result
 }
 
 module.exports = async (req, res) => {
@@ -47,7 +59,11 @@ module.exports = async (req, res) => {
   if (!consent) return res.status(400).json({ message: 'Consentement requis' })
   if (!email || !validator.isEmail(String(email))) return res.status(400).json({ message: 'Email invalide' })
   if (!name || typeof name !== 'string') return res.status(400).json({ message: 'Nom requis' })
-  if (!validatePassword(password)) return res.status(400).json({ message: 'Mot de passe non conforme (>=12 chars et 3 catégories)' })
+  const pwdCheck = await validatePassword(password)
+  if (!pwdCheck.ok) {
+    // Provide a clear, user-friendly error message and list missing criteria for audit proof
+    return res.status(400).json({ message: 'Mot de passe non conforme', details: pwdCheck.reasons })
+  }
 
   try {
     const existing = await User.findOne({ email }).exec()
@@ -68,17 +84,18 @@ module.exports = async (req, res) => {
     }
     const token = jwt.sign({ id: user._id, role: user.role, tokenVersion: user.tokenVersion }, JWT_SECRET || 'devsecret', { expiresIn: '15m' })
     const isProd = process.env.NODE_ENV === 'production'
+    const isSecure = isProd || req.headers['x-forwarded-proto'] === 'https' || (req.socket && req.socket.encrypted)
     const csrfToken = crypto.randomBytes(24).toString('hex')
     const cookieToken = cookie.serialize('token', token, {
       httpOnly: true,
-      secure: isProd,
+      secure: isSecure,
       sameSite: 'strict',
       path: '/',
       maxAge: 15 * 60
     })
     const csrfCookie = cookie.serialize('csrfToken', csrfToken, {
       httpOnly: false,
-      secure: isProd,
+      secure: isSecure,
       sameSite: 'strict',
       path: '/',
       maxAge: 15 * 60
@@ -87,7 +104,7 @@ module.exports = async (req, res) => {
 
     return res.status(201).json({ ok: true, csrfToken })
   } catch (err) {
-    console.error(err)
-    return res.status(500).json({ message: 'Erreur serveur' })
+    const { handleError } = require('../../../../lib/handleError')
+    return handleError(res, err, { meta: { route: '/api/auth/register' } })
   }
 }

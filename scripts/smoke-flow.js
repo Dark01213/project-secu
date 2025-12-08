@@ -1,6 +1,6 @@
 const fetch = global.fetch || require('node-fetch')
 
-const BASE = process.env.BASE || 'http://localhost:3000'
+const BASE = process.env.BASE || process.env.NEXT_PUBLIC_BASE_URL || 'https://localhost:3443'
 
 const managerEmail = process.env.MANAGER_EMAIL
 const managerPassword = process.env.MANAGER_PASSWORD

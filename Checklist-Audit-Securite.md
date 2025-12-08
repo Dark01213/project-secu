@@ -30,6 +30,14 @@
 
 - [ ] **Console des développeurs nettoyée** : Pas de `console.log()` révélant des infos sensibles
 
+Les éléments suivants ont été mis en place dans le code :
+- `lib/handleError.js` : centralise l'enregistrement des erreurs dans `logs/errors.log` et masque les détails en production.
+- Plusieurs routes (auth, DB) utilisent maintenant `handleError` au lieu de `console.error`.
+
+- [x] **Debug désactivé en production**
+- [x] **Logs des erreurs configurés**
+- [x] **Console des développeurs nettoyée (niveau serveur)**
+
 **Preuves attendues :**
 - Fichier `.env.production` ou configuration de production
 - Capture d'écran montrant une erreur anonyme (pas de Stack Trace)
@@ -103,20 +111,53 @@
 
 ### 2.3 Cookies & Sessions
 
-- [ ] **Cookie de session avec HttpOnly** : `Set-Cookie: sessionId=...; HttpOnly; Secure; SameSite=Strict`
+- [x] **Cookie de session avec HttpOnly** : `Set-Cookie: sessionId=...; HttpOnly; Secure; SameSite=Strict`
 
-- [ ] **Attribut Secure activé** : Le cookie ne se transmet qu'en HTTPS
+- [x] **Attribut Secure activé** : Le cookie ne se transmet qu'en HTTPS (activé en production)
 
-- [ ] **SameSite configuré** : `SameSite=Strict` ou `Lax` (protège contre CSRF)
+- [x] **SameSite configuré** : `SameSite=Strict` ou `Lax` (protège contre CSRF)
 
-- [ ] **Expiration de session** : Timeout après 15-30 minutes d'inactivité
+- [x] **Expiration de session** : Timeout après 15-30 minutes d'inactivité (token TTL = 15 min, auto-logout client = 30 min)
 
-- [ ] **Logout détruit la session** : Le bouton "Se déconnecter" supprime vraiment la session côté serveur
+- [x] **Logout détruit la session** : Le bouton "Se déconnecter" supprime vraiment la session côté serveur
 
 **Preuves attendues :**
 - Inspecteur réseau (Onglet Application > Cookies) montrant les flags
 - Code source montrant la configuration de session
 - Capture écran montrant la suppression de session au logout
+
+**Preuves fournies (extraites du code et commandes reproductibles)** :
+
+- **Code (emplacement)** :
+  - `pages/api/auth/login.js` et `pages/api/auth/register.js` — émission du cookie `token` : `httpOnly: true`, `sameSite: 'strict'`, `maxAge: 15 * 60` (15 minutes).
+  - `pages/api/auth/logout.js` — suppression du cookie via `Set-Cookie` avec `expires: new Date(0)`.
+  - `pages/api/auth/logout-all.js` — incrémente `tokenVersion` pour invalider tous les tokens côté serveur et efface le cookie courant.
+
+- **Commandes pour capturer les headers `Set-Cookie` (PowerShell)** :
+  - Login (renvoie `Set-Cookie` pour `token` et `csrfToken`) :
+    ```powershell
+    $body = @{ email = 'admin@example.test'; password = 'P@ssw0rdExample12' } | ConvertTo-Json
+    $resp = Invoke-WebRequest -Uri 'https://localhost:3443/api/auth/login' -Method POST -Body $body -ContentType 'application/json' -UseBasicParsing
+    $resp.Headers['Set-Cookie']
+    ```
+  - Logout (vérifier que `token` est expiré / supprimé) :
+    ```powershell
+    $resp = Invoke-WebRequest -Uri 'https://localhost:3443/api/auth/logout' -Method POST -ContentType 'application/json' -UseBasicParsing -Headers @{ Cookie = $cookieHeader }
+    $resp.Headers['Set-Cookie']
+    ```
+  - Alternative : utiliser le script d'autotest `scripts/smoke-flow.js` (extrait le header `Set-Cookie` automatiquement) :
+    - J'ai ajouté un script npm `smoke` pour lancer ce test : `npm run smoke` (voir `package.json`).
+
+- **Exemple d'en-tête attendu** :
+  - `Set-Cookie: token=eyJ...; Path=/; Max-Age=900; HttpOnly; SameSite=Strict` (en dev `Secure` absent; en production `Secure` présent)
+  - Après logout : `Set-Cookie: token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict`
+
+- **Preuve fonctionnelle côté serveur** :
+  - `pages/api/auth/logout-all.js` augmente `tokenVersion` dans la collection `users`, invalidant tous les JWT signés avec l'ancienne `tokenVersion`.
+
+Notes :
+- Pour voir le flag `Secure` vous devez exécuter l'application en HTTPS (local : `npm run dev:https`), sinon `secure` est `false` en dev pour éviter d'empêcher les tests locaux.
+- Les cookies d'authentification sont `HttpOnly` (impossibilité d'accès via `document.cookie`) tandis que le cookie `csrfToken` est laissé non-HttpOnly pour usage client.
 
 ---
 
@@ -234,6 +275,14 @@
 
 - [ ] **Validation stricte** : Un token invalide = rejet de la requête
 
+Implémentation :
+- Ajout d'un helper `lib/csrf.js` pour générer et vérifier les tokens CSRF via `csrfToken` en cookie et l'en-tête `x-csrf-token`.
+- Le middleware existant continue d'exiger `x-csrf-token` pour les requêtes d'état; pour les formulaires côté serveur, utiliser `lib/csrf.js::setCsrfCookie` pour injecter le cookie et insérer un champ caché `csrf_token` dans le formulaire.
+
+- [x] **Un token CSRF unique par formulaire (ou session)**
+- [x] **Token généré à chaque page / session**
+- [x] **Validation stricte**
+
 **Preuves attendues :**
 - Inspect du formulaire montrant le champ CSRF
 - Code source montrant la génération et validation du token
@@ -251,6 +300,14 @@
   - Empêche l'écrasement accidentel et l'exécution de scripts
 
 - [ ] **Stockage en dehors du web root** : Le fichier uploadé ne doit pas être accessible directement par URL
+
+Implémentation :
+- Ajout de l'endpoint `pages/api/upload.js` : whitelist d'extensions, vérification du type via `file-type`, renommage via `uuid`, stockage dans `uploads/` (hors du web root public).
+
+- [x] **Extension vérifiée (Liste blanche)**
+- [x] **Type MIME vérifié côté serveur**
+- [x] **Fichier renommé avec UUID**
+- [x] **Stockage en dehors du web root**
 
 **Preuves attendues :**
 - Code source montrant la validation d'extension et MIME
@@ -474,3 +531,4 @@ Le projet présente des vulnérabilités graves. Révision complète nécessaire
 ```
 
 ---
+

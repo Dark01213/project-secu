@@ -1,3 +1,4 @@
+
 node_modules/
 .next/
 .env
@@ -7,3 +8,16 @@ dist/
 npm-debug.log
 *.log
 /.vscode/
+cookies*.txt
+localhost-key.pem
+localhost.pem
+logs/
+uploads/
+audits/evidence.zip
+
+# Ignore sensitive audit history exports
+audits/secret-scan-history.txt
+
+# Local DB dumps and init helpers (ignore dumps and mongo init dir)
+dump/
+mongo-init/

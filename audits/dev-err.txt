@@ -1,0 +1,56 @@
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\cedri\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\cedri\Desktop\b3\sécurité\Projet\package-lock.json
+   * C:\Users\cedri\Desktop\b3\package-lock.json
+
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+ ⨯ ./Desktop/b3/sécurité/Projet/pages/api/auth/login.js:104:29
+Module not found: Can't resolve '../../../../lib/handleError'
+[0m [90m 102 |[39m     [36mreturn[39m res[33m.[39mjson({ ok[33m:[39m [36mtrue[39m[33m,[39m csrfToken })
+ [90m 103 |[39m   } [36mcatch[39m (err) {
+[31m[1m>[22m[39m[90m 104 |[39m     [36mconst[39m { handleError } [33m=[39m require([32m'../../../../lib/handleError'[39m)
+ [90m     |[39m                             [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 105 |[39m     [36mreturn[39m handleError(res[33m,[39m err[33m,[39m { meta[33m:[39m { route[33m:[39m [32m'/api/auth/login'[39m } })
+ [90m 106 |[39m   }
+ [90m 107 |[39m }[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+(node:28556) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ ⨯ ./Desktop/b3/sécurité/Projet/pages/api/auth/login.js:104:29
+Module not found: Can't resolve '../../../../lib/handleError'
+[0m [90m 102 |[39m     [36mreturn[39m res[33m.[39mjson({ ok[33m:[39m [36mtrue[39m[33m,[39m csrfToken })
+ [90m 103 |[39m   } [36mcatch[39m (err) {
+[31m[1m>[22m[39m[90m 104 |[39m     [36mconst[39m { handleError } [33m=[39m require([32m'../../../../lib/handleError'[39m)
+ [90m     |[39m                             [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 105 |[39m     [36mreturn[39m handleError(res[33m,[39m err[33m,[39m { meta[33m:[39m { route[33m:[39m [32m'/api/auth/login'[39m } })
+ [90m 106 |[39m   }
+ [90m 107 |[39m }[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ ⚠ ./Desktop/b3/sécurité/Projet/pages/api/auth/logout.js:17:30
+Module not found: Can't resolve '../../../../lib/handleError'
+[0m [90m 15 |[39m         [36mawait[39m [33mAuditLog[39m[33m.[39mcreate({ user[33m:[39m user[33m?[39m[33m.[39m_id[33m,[39m action[33m:[39m [32m'logout'[39m[33m,[39m ip[33m:[39m getIp(req)[33m,[39m userAgent[33m:[39m req[33m.[39mheaders[[32m'user-agent'[39m] [33m||[39m [32m''[39m[33m,[39m meta[33m:[39m {} })
+ [90m 16 |[39m       }[36mcatch[39m(e){
+[31m[1m>[22m[39m[90m 17 |[39m         [36mconst[39m { logError } [33m=[39m require([32m'../../../../lib/handleError'[39m)
+ [90m    |[39m                              [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 18 |[39m         logError(e[33m,[39m { route[33m:[39m [32m'/api/auth/logout'[39m[33m,[39m user[33m:[39m user[33m?[39m[33m.[39m_id })
+ [90m 19 |[39m       }
+ [90m 20 |[39m   }[36mcatch[39m(e){ [90m/* ignore */[39m }[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
